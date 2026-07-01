@@ -1,0 +1,9 @@
+mcap==1.4.0
+mcap-ros2-support==0.5.7
+lz4==4.4.5
+zstandard==0.25.0
+numpy==2.0.2
+opencv-python-headless==4.13.0.92
+pillow==11.3.0
+PyYAML==6.0.3
+scipy==1.13.1
