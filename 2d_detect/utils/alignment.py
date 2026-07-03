@@ -40,18 +40,23 @@ def iter_alignment_records(
     aligned_index: dict[str, Any],
     projection_lookup: dict[tuple[int, str], dict[str, Any]],
     cameras: list[str],
-    valid_time_only: bool,
+    include_invalid: bool,
     max_frames: int | None,
 ) -> Iterable[dict[str, Any]]:
     """把 aligned_index 展开为逐 PCD-camera 的检测输入记录。"""
     frames = aligned_index.get("frames", [])
-    if max_frames is not None:
-        frames = frames[:max_frames]
 
     dataset_id = dataset_root.name
+    selected_frame_count = 0
     for frame in frames:
         pcd_timestamp = int(frame["pcd_timestamp"])
         frame_valid = bool(frame.get("valid_time_match"))
+        if not include_invalid and not frame_valid:
+            continue
+        selected_frame_count += 1
+        if max_frames is not None and selected_frame_count > max_frames:
+            break
+
         for camera in cameras:
             image_info = frame.get("images", {}).get(camera)
             if not image_info:
@@ -59,8 +64,6 @@ def iter_alignment_records(
             if not image_info.get("exists", True):
                 continue
             valid_time_match = bool(image_info.get("valid_time_match"))
-            if valid_time_only and not valid_time_match:
-                continue
 
             # aligned_index 中的 image path 可能是绝对路径、数据集相对路径或带数据集名前缀的路径。
             image_path = resolve_dataset_path(dataset_root, image_info.get("path"))
