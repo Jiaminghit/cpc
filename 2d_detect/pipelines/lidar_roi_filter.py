@@ -50,6 +50,11 @@ def validate_args(args: argparse.Namespace) -> None:
         raise ValueError("--roi-longitudinal-min must be <= --roi-longitudinal-max.")
     if not 0.0 < args.depth_percentile <= 1.0:
         raise ValueError("--depth-percentile must be in (0, 1].")
+    if not 0.0 <= args.bbox_candidate_y_min_ratio < args.bbox_candidate_y_max_ratio <= 1.0:
+        raise ValueError(
+            "--bbox-candidate-y-min-ratio and --bbox-candidate-y-max-ratio must satisfy "
+            "0 <= min < max <= 1."
+        )
     if args.min_points_in_bbox <= 0 or args.min_points_used <= 0:
         raise ValueError("--min-points-in-bbox and --min-points-used must be positive.")
 
@@ -126,6 +131,8 @@ def run_lidar_roi_filter(args: argparse.Namespace) -> None:
             "min_points_in_bbox": args.min_points_in_bbox,
             "min_points_used": args.min_points_used,
             "depth_percentile": args.depth_percentile,
+            "bbox_candidate_y_min_ratio": args.bbox_candidate_y_min_ratio,
+            "bbox_candidate_y_max_ratio": args.bbox_candidate_y_max_ratio,
             "roi": roi_config_to_dict(roi_config),
             "include_invalid": bool(args.include_invalid),
             "valid_frame_only": not bool(args.include_invalid),
@@ -268,6 +275,8 @@ def run_lidar_roi_filter(args: argparse.Namespace) -> None:
                         min_points_in_bbox=args.min_points_in_bbox,
                         min_points_used=args.min_points_used,
                         depth_percentile=args.depth_percentile,
+                        bbox_candidate_y_min_ratio=args.bbox_candidate_y_min_ratio,
+                        bbox_candidate_y_max_ratio=args.bbox_candidate_y_max_ratio,
                     )
                 detection["lidar_roi"] = roi
                 debug_selections.append((detection, selection))
