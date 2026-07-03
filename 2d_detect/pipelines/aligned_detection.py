@@ -54,7 +54,7 @@ def run_aligned_detection(args: argparse.Namespace) -> None:
             aligned_index=aligned_index,
             projection_lookup=projection_lookup,
             cameras=cameras,
-            valid_time_only=args.valid_time_only,
+            include_invalid=args.include_invalid,
             max_frames=args.max_frames,
         )
     )
@@ -81,7 +81,8 @@ def run_aligned_detection(args: argparse.Namespace) -> None:
         "model": adapter.model_block(),
         "params": adapter.params_block(),
         "classes": CLASS_TABLE,
-        "valid_time_only": args.valid_time_only,
+        "include_invalid": bool(args.include_invalid),
+        "valid_frame_only": not bool(args.include_invalid),
         "cameras": cameras,
         "max_frames": args.max_frames,
         "max_images": args.max_images,
