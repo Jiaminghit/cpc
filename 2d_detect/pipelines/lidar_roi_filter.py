@@ -66,6 +66,14 @@ def build_roi_config(args: argparse.Namespace) -> RoiConfig:
     )
 
 
+def record_frame_valid(record: dict[str, Any], frames_by_timestamp: dict[int, dict[str, Any]]) -> bool:
+    """判断一条检测记录所属 PCD frame 是否通过整帧时间同步检查。"""
+    if "frame_valid_time_match" in record:
+        return bool(record.get("frame_valid_time_match"))
+    frame = frames_by_timestamp.get(int(record["pcd_timestamp"]))
+    return bool(frame and frame.get("valid_time_match"))
+
+
 def run_lidar_roi_filter(args: argparse.Namespace) -> None:
     """执行完整的 LiDAR ROI 过滤流程。"""
     dataset_root = args.dataset_root.expanduser().resolve()
@@ -97,8 +105,8 @@ def run_lidar_roi_filter(args: argparse.Namespace) -> None:
     if args.cameras:
         camera_filter = set(args.cameras)
         records = [record for record in records if record.get("camera") in camera_filter]
-    if args.valid_time_only:
-        records = [record for record in records if record.get("valid_time_match")]
+    if not args.include_invalid:
+        records = [record for record in records if record_frame_valid(record, frames_by_timestamp)]
     if args.max_records is not None:
         records = records[: args.max_records]
 
@@ -119,7 +127,8 @@ def run_lidar_roi_filter(args: argparse.Namespace) -> None:
             "min_points_used": args.min_points_used,
             "depth_percentile": args.depth_percentile,
             "roi": roi_config_to_dict(roi_config),
-            "valid_time_only": args.valid_time_only,
+            "include_invalid": bool(args.include_invalid),
+            "valid_frame_only": not bool(args.include_invalid),
             "cameras": args.cameras,
             "max_records": args.max_records,
             "save_vis": args.save_vis,
